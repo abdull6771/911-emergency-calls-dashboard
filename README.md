@@ -1,4 +1,3 @@
-Here's a polished and structured `README.md` version of your project description:
 
 ---
 
@@ -68,7 +67,7 @@ Data preprocessing includes:
 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/your-username/911-emergency-calls-dashboard.git
+git clone https://github.com/abdull6771/911-emergency-calls-dashboard.git
 cd 911-emergency-calls-dashboard
 ```
 
@@ -177,8 +176,6 @@ This project is licensed under the **MIT License**. See `LICENSE` for details.
 
 ## 📬 Contact
 
-For questions or feedback, open an issue or contact: `your-email@example.com`
+For questions or feedback, open an issue or contact: `abdulll8392@gmail.com`
 
 ---
-
-Would you like a badge set (e.g., Python version, license, stars) added at the top too?
