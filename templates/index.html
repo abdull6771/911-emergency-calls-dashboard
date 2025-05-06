@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>911 Emergency Calls Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly JS -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        .plotly-chart {
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-gradient-to-r from-indigo-600 to-teal-500 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold">911 Emergency Calls Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="text-white hover:text-gray-200 focus:outline-none">
+                        <svg id="theme-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </button>
+                    <button id="sidebar-toggle" class="text-white hover:text-gray-200 focus:outline-none md:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <a href="https://www.kaggle.com/mchirico/montcoalert" target="_blank" class="hidden md:block text-white hover:text-gray-200">Dataset Source</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40">
+        <div class="p-4">
+            <h2 class="text-xl font-semibold">Navigation</h2>
+            <ul class="mt-4 space-y-2">
+                <li><a href="#hero" class="block py-2 px-4 hover:bg-gray-700 rounded">Introduction</a></li>
+                <li><a href="#reason" class="block py-2 px-4 hover:bg-gray-700 rounded">Call Types</a></li>
+                <li><a href="#monthly" class="block py-2 px-4 hover:bg-gray-700 rounded">Seasonal Trends</a></li>
+                <li><a href="#heatmap" class="block py-2 px-4 hover:bg-gray-700 rounded">Peak Times</a></li>
+                <li><a href="#map" class="block py-2 px-4 hover:bg-gray-700 rounded">Call Locations</a></li>
+                <li><a href="#township" class="block py-2 px-4 hover:bg-gray-700 rounded">Hotspots</a></li>
+                <li><a href="#conclusion" class="block py-2 px-4 hover:bg-gray-700 rounded">Takeaways</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:ml-64">
+        <!-- Filter Dropdown -->
+        <div class="mb-8">
+            <label for="reason-filter" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Filter by Call Reason:</label>
+            <select id="reason-filter" class="w-full sm:w-64 p-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                <option value="all">All Reasons</option>
+                <option value="EMS">EMS</option>
+                <option value="Fire">Fire</option>
+                <option value="Traffic">Traffic</option>
+            </select>
+        </div>
+
+        <!-- Hero Section -->
+        <section id="hero" class="bg-gradient-to-r from-indigo-500 to-teal-400 text-white rounded-lg shadow-xl p-8 mb-8 fade-in">
+            <h1 class="text-4xl font-bold mb-4">Understanding 911 Emergency Calls</h1>
+            <p class="text-lg">
+                Explore a dataset of 911 calls from Montgomery County, PA, to uncover patterns in emergency types, timing, and locations. Use the filter above to focus on specific call types and interact with the charts below.
+            </p>
+        </section>
+
+        <!-- Visualizations -->
+        <!-- Reason Distribution -->
+        <section id="reason" class="mb-12 fade-in" style="animation-delay: 0.2s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="group relative">
+                        <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Call Types: What Drives 911 Calls?</h3>
+                        <span class="absolute hidden group-hover:block bg-gray-800 text-white text-sm rounded p-2 -top-10 left-0">Distribution of EMS, Fire, and Traffic calls</span>
+                    </div>
+                    <button class="share-button text-gray-600 dark:text-gray-300 hover:text-indigo-600" data-section="reason">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    This bar chart highlights the most common emergency types.
+                </p>
+                <p class="text-gray-800 dark:text-gray-200 font-semibold mt-2">
+                    <strong>Insight</strong>: EMS calls dominate, indicating a high demand for medical services.
+                </p>
+                <div id="reason-chart" class="plotly-chart mt-4"></div>
+            </div>
+        </section>
+
+        <!-- Monthly Trends -->
+        <section id="monthly" class="mb-12 fade-in" style="animation-delay: 0.4s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="group relative">
+                        <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Seasonal Trends: When Are Calls Highest?</h3>
+                        <span class="absolute hidden group-hover:block bg-gray-800 text-white text-sm rounded p-2 -top-10 left-0">Tracks call volume by month</span>
+                    </div>
+                    <button class="share-button text-gray-600 dark:text-gray-300 hover:text-indigo-600" data-section="monthly">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632 ✅-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    This line chart reveals seasonal patterns to inform resource planning.
+                </p>
+                <p class="text-gray-800 dark:text-gray-200 font-semibold mt-2">
+                    <strong>Insight</strong>: Peaks in certain months suggest seasonal factors like weather influence call volume.
+                </p>
+                <div id="monthly-chart" class="plotly-chart mt-4"></div>
+            </div>
+        </section>
+
+        <!-- Day-Hour Heatmap -->
+        <section id="heatmap" class="mb-12 fade-in" style="animation-delay: 0.6s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="group relative">
+                        <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Peak Times: When Are Resources Stretched?</h3>
+                        <span class="absolute hidden group-hover:block bg-gray-800 text-white text-sm rounded p-2 -top-10 left-0">Shows call frequency by day and hour</span>
+                    </div>
+                    <button class="share-button text-gray-600 dark:text-gray-300 hover:text-indigo-600" data-section="heatmap">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    This heatmap identifies when emergency services are most in demand.
+                </p>
+                <p class="text-gray-800 dark:text-gray-200 font-semibold mt-2">
+                    <strong>Insight</strong>: Daytime hours on weekdays see the highest call volumes, necessitating robust staffing.
+                </p>
+                <div id="heatmap-chart" class="plotly-chart mt-4"></div>
+            </div>
+        </section>
+
+        <!-- Geographic Map -->
+        <section id="map" class="mb-12 fade-in" style="animation-delay: 0.8s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="group relative">
+                        <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Call Locations: Where Are Calls Originating?</h3>
+                        <span class="absolute hidden group-hover:block bg-gray-800 text-white text-sm rounded p-2 -top-10 left-0">Map of call locations by latitude and longitude</span>
+                    </div>
+                    <button class="share-button text-gray-600 dark:text-gray-300 hover:text-indigo-600" data-section="map">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    This map visualizes the geographic distribution of 911 calls using latitude and longitude.
+                </p>
+                <p class="text-gray-800 dark:text-gray-200 font-semibold mt-2">
+                    <strong>Insight</strong>: Urban areas show higher call density, suggesting targeted resource deployment.
+                </p>
+                <div id="map-chart" class="plotly-chart mt-4"></div>
+            </div>
+        </section>
+
+        <!-- Top Townships -->
+        <section id="township" class="mb-12 fade-in" style="animation-delay: 1s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex justify-between items-center">
+                    <div class="group relative">
+                        <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Hotspots: Where Are Calls Concentrated?</h3>
+                        <span class="absolute hidden group-hover:block bg-gray-800 text-white text-sm rounded p-2 -top-10 left-0">Top 10 townships by call volume</span>
+                    </div>
+                    <button class="share-button text-gray-600 dark:text-gray-300 hover:text-indigo-600" data-section="township">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    This bar chart pinpoints areas with high emergency needs.
+                </p>
+                <p class="text-gray-800 dark:text-gray-200 font-semibold mt-2">
+                    <strong>Insight</strong>: High-volume townships may require targeted safety campaigns.
+                </p>
+                <div id="township-chart" class="plotly-chart mt-4"></div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="conclusion" class="mb-12 fade-in" style="animation-delay: 1.2s;">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Key Takeaways and Recommendations</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-4">
+                    This dashboard reveals critical patterns in 911 calls:
+                </p>
+                <ul class="list-disc pl-6 text-gray-600 dark:text-gray-400">
+                    <li><strong>Prioritize EMS</strong>: High EMS call volume underscores the need for enhanced medical resources.</li>
+                    <li><strong>Optimize Staffing</strong>: Peak daytime and weekday calls require robust staffing, with flexible weekend schedules.</li>
+                    <li><strong>Target Hotspots</strong>: High-volume townships and urban areas need safety campaigns or infrastructure improvements.</li>
+                    <li><strong>Plan Seasonally</strong>: Anticipate spikes in peak months with additional resources.</li>
+                </ul>
+                <p class="text-gray-600 dark:text-gray-400 mt-4">
+                    Act on these insights to improve response times and enhance community safety. Share these findings with stakeholders or explore further with the filter above!
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-all duration-300 hidden animate-bounce">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-6">
+        <p>Created with Flask, Plotly, and Tailwind CSS | Data Source: <a href="https://www.kaggle.com/mchirico/montcoalert" class="text-teal-300 hover:text-teal-200" target="_blank">Kaggle</a></p>
+    </footer>
+
+    <!-- Plotly Chart Initialization -->
+    <script>
+        Plotly.newPlot('reason-chart', {{ reason_plot | safe }}, { responsive: true });
+        Plotly.newPlot('monthly-chart', {{ monthly_plot | safe }}, { responsive: true });
+        Plotly.newPlot('heatmap-chart', {{ heatmap_plot | safe }}, { responsive: true });
+        Plotly.newPlot('map-chart', {{ map_plot | safe }}, { responsive: true });
+        Plotly.newPlot('township-chart', {{ township_plot | safe }}, { responsive: true });
+    </script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
